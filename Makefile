@@ -42,6 +42,9 @@ endif
 ifdef ARKOUDA_HDF5_PATH
 $(eval $(call add-path,$(ARKOUDA_HDF5_PATH)))
 endif
+ifdef ARKOUDA_DMTCP_PATH
+$(eval $(call add-path,$(ARKOUDA_DMTCP_PATH)))
+endif
 
 # For configs that use a fixed heap, but still have first-touch semantics
 # (gasnet-ibv-large) interleave large allocations to reduce the performance hit

@@ -21,6 +21,10 @@ use SymArrayDmap;
 use ServerErrorStrings;
 use Message;
 
+extern {
+  #include "dmtcp.h"
+}
+
 private config const logLevel = ServerConfig.logLevel;
 const asLogger = new Logger(logLevel);
 
@@ -209,7 +213,11 @@ proc main() {
     
     while !shutdownServer {
         // receive message on the zmq socket
+        extern proc dmtcp_disable_ckpt() : int;
+        extern proc dmtcp_enable_ckpt() : int;
+        dmtcp_disable_ckpt();
         var reqMsgRaw = socket.recv(bytes);
+        dmtcp_enable_ckpt();
 
         reqCount += 1;
 

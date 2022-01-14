@@ -7,6 +7,7 @@ from arkouda import security, io_util, __version__
 from arkouda.logger import getArkoudaLogger
 from arkouda.message import RequestMessage, MessageFormat, ReplyMessage, \
      MessageType
+from time import sleep
 
 __all__ = ["connect", "disconnect", "shutdown", "get_config", "get_mem_used", "ruok"]
 
@@ -325,13 +326,17 @@ def _send_string_message(cmd : str, recv_binary : bool=False,
         Raised if the return message is malformed JSON or is missing 1..n
         expected fields       
     """
+    global socket, context
     message = RequestMessage(user=username, token=token, cmd=cmd, 
                           format=MessageFormat.STRING, args=args)
 
     logger.debug('sending message {}'.format(message))
-
-    socket.send_string(json.dumps(message.asdict()))
-
+    try:
+        socket.send_string(json.dumps(message.asdict()))
+    except zmq.error.ZMQError as e:
+        print("Obtained ZMQError: ", e)
+        sleep(5)
+        return _send_string_message(cmd, recv_binary, args)
     if recv_binary:
         frame = socket.recv(copy=False)
         view = frame.buffer
@@ -340,22 +345,25 @@ def _send_string_message(cmd : str, recv_binary : bool=False,
             raise RuntimeError(frame.bytes.decode())
         return view
     else:
-        raw_message = socket.recv_string()
-        try:
-            return_message = ReplyMessage.fromdict(json.loads(raw_message))
+        while True:
+            try:
+                raw_message = socket.recv_string()
+                return_message = ReplyMessage.fromdict(json.loads(raw_message))
 
-            # raise errors or warnings sent back from the server
-            if return_message.msgType == MessageType.ERROR:
-                raise RuntimeError(return_message.msg)
-            elif return_message.msgType == MessageType.WARNING:
-                warnings.warn(return_message.msg)
-            return return_message.msg
-        except KeyError as ke:
-            raise ValueError('Return message is missing the {} field'.format(ke))
-        except json.decoder.JSONDecodeError:
-            raise ValueError('Return message is not valid JSON: {}'.\
+                # raise errors or warnings sent back from the server
+                if return_message.msgType == MessageType.ERROR:
+                    raise RuntimeError(return_message.msg)
+                elif return_message.msgType == MessageType.WARNING:
+                    warnings.warn(return_message.msg)
+                return return_message.msg
+            except KeyError as ke:
+                raise ValueError('Return message is missing the {} field'.format(ke))
+            except json.decoder.JSONDecodeError:
+                raise ValueError('Return message is not valid JSON: {}'.\
                              format(raw_message))
-
+            except zmq.error.ZMQError as e:
+                print("Obtained ZMQError: ", e)
+                sleep(5)
 
 def _send_binary_message(cmd : str, payload : memoryview, recv_binary : bool=False,
                          args : str=None) -> Union[str, memoryview]:
