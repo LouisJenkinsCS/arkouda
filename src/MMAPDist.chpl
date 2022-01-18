@@ -219,7 +219,7 @@ This distribution has not been tuned for performance.
 */
 
 var uniqueFileSuffix : atomic int;
-config const mmapFileSuffix = "";
+config const mmapFilePrefix = "";
 class CyclicMMAP: BaseDist {
   param rank: int;
   type idxType = int;
@@ -1035,7 +1035,7 @@ class LocCyclicMMAPArr {
       this.complete();
     } else {
       var size = this.locDom.myBlock.size * c_sizeof(eltType):int;
-      myFName = myFName + "tester-" + uniqueFileSuffix.fetchAdd(1):string + "-" +  here:string;
+      myFName = mmapFilePrefix + "tester-" + uniqueFileSuffix.fetchAdd(1):string + "-" +  here:string;
       myFP = fopen(myFName.c_str(), "wb+");
       assert(myFP != nil, "Failed to open: '", myFName, "'");
       var ret = ftruncate(fileno(myFP), size); // Make file exact requested size
