@@ -314,6 +314,7 @@ module GenSymIO {
      * Reads all datasets from 1..n HDF5 files into an Arkouda symbol table. 
      */
     proc readAllHdfMsg(cmd: string, payload: string, st: borrowed SymTab): MsgTuple throws {
+        if MyDmap == Dmap.mmapRectangular then halt("We do not support reading HDF5 files into MMAPRectangular");
         var repMsg: string;
         // May need a more robust delimiter then " | "
         var (strictFlag, ndsetsStr, nfilesStr, allowErrorsFlag, calcStringOffsetsFlag, arraysStr) = payload.splitMsgToTuple(6);
@@ -1003,10 +1004,16 @@ module GenSymIO {
            }
     }
 
+    proc read_files_into_distributed_array(A, filedomains: [?FD] domain(1), 
+                                                 filenames: [FD] string, dsetName: string, skips: set(string)) throws
+                                                where (MyDmap == Dmap.mmapRectangular) {
+                                                    halt("Cannot do this!");
+                                                }
+
     /* This function gets called when A is a BlockDist or DefaultRectangular array. */
     proc read_files_into_distributed_array(A, filedomains: [?FD] domain(1), 
                                                  filenames: [FD] string, dsetName: string, skips: set(string)) throws 
-        where (MyDmap == Dmap.blockDist || MyDmap == Dmap.defaultRectangular) {
+        where (MyDmap == Dmap.blockDist || MyDmap == Dmap.defaultRectangular) && MyDmap != Dmap.mmapRectangular {
             gsLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                     "entry.a.targetLocales() = %t".format(A.targetLocales()));
             gsLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
@@ -1063,10 +1070,14 @@ module GenSymIO {
                                 * The fact that intersection is a subset of a local subdomain means
                                 * there should be no communication in the read
                                 */
-                                local {
-                                    C_HDF5.H5Dread(dataset, getHDF5Type(A.eltType), memspace, 
-                                            dataspace, C_HDF5.H5P_DEFAULT, 
-                                            c_ptrTo(A.localSlice(intersection)));
+                                if MyDmap == Dmap.mmapRectangular {
+                                    halt("Need to handle this logic somehow...");
+                                } else {
+                                    local {
+                                        C_HDF5.H5Dread(dataset, getHDF5Type(A.eltType), memspace, 
+                                                dataspace, C_HDF5.H5P_DEFAULT, 
+                                                c_ptrTo(A.localSlice(intersection)));
+                                    }
                                 }
                                 C_HDF5.H5Sclose(memspace);
                                 C_HDF5.H5Sclose(dataspace);
@@ -1289,7 +1300,7 @@ module GenSymIO {
             defer { // Close the file on exit
                 C_HDF5.H5Fclose(myFileID);
             }
-            const locDom = A.localSubdomain();
+            const locDom = if MyDmap == Dmap.mmapRectangular then A.domain else A.localSubdomain();
             var dims: [0..#1] C_HDF5.hsize_t;
             dims[0] = locDom.size: C_HDF5.hsize_t;
             var myDsetName = "/" + dsetName;
@@ -1322,13 +1333,13 @@ module GenSymIO {
                  * slice is the null uint(8) character. If it is not, this means the last string 
                  * in the current locale (idx) spans the current AND next locale.
                  */
-                if A.localSlice(locDom).back() != NULL_STRINGS_VALUE { 
+                if (if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom)).back() != NULL_STRINGS_VALUE { 
                     /*
                      * Retrieve the chars array slice from this locale and populate the charList
                      * that will be updated per left and/or right shuffle operations until the 
                      * final char list is assembled
                      */ 
-                    var charArray = A.localSlice(locDom);
+                    var charArray = if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom);
                     var charList : list(uint(8)) = new list(charArray);
 
                     gsLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
@@ -1357,8 +1368,8 @@ module GenSymIO {
                             var rightShuffleSlice : [shuffleRightIndex..charArraySize[idx-1]-1] uint(8);
 
                             on Locales[idx-1] {
-                                const locDom = A.localSubdomain();
-                                var localeArray = A.localSlice(locDom);
+                                const locDom = if MyDmap == Dmap.mmapRectangular then A.domain else A.localSubdomain();
+                                var localeArray = if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom);
                                 rightShuffleSlice = localeArray[shuffleRightIndex..localeArray.size-1];
                             }
 
@@ -1393,9 +1404,9 @@ module GenSymIO {
 
                     if shuffleLeftIndices[idx+1] > -1 || isLastLocale(idx+1) {
                         on Locales[idx+1] {
-                            const locDom = A.localSubdomain();
+                            const locDom = if MyDmap == Dmap.mmapRectangular then A.domain else A.localSubdomain();
 
-                            var localeArray = A.localSlice(locDom);
+                            var localeArray = if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom);
                             var shuffleLeftIndex = shuffleLeftIndices[here.id];
                             var localStart = locDom.first;
                             var localLeadingSliceIndex = localStart + shuffleLeftIndex -2;
@@ -1494,7 +1505,7 @@ module GenSymIO {
                         * not contain chars from a string started in the previous locale (idx-1).
                         * Accordingly, initialize with the current locale slice.
                         */
-                        charList = new list(A.localSlice(locDom));
+                        charList = new list(if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom));
 
                         /*
                         * If this locale (idx) ends with the null uint(8) char, check to see if 
@@ -1512,8 +1523,8 @@ module GenSymIO {
                             if shuffleRightIndex > -1 {
                                 var shuffleRightSlice: [shuffleRightIndex..charArraySize[idx-1]-1] uint(8);
                                 on Locales[idx-1] {
-                                    const locDom = A.localSubdomain();  
-                                    var localeArray = A.localSlice(locDom);
+                                    const locDom = if MyDmap == Dmap.mmapRectangular then A.domain else A.localSubdomain();  
+                                    var localeArray = if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom);
                                     shuffleRightSlice = localeArray[shuffleRightIndex..localeArray.size-1]; 
                                 }
                                 charList.insert(0,shuffleRightSlice);
@@ -1565,13 +1576,13 @@ module GenSymIO {
                             var localStart = locDom.first;
                             var localLeadingSliceIndex = localStart + shuffleLeftIndex;
                             var leadingCharArray = adjustCharArrayForLeadingSlice(localLeadingSliceIndex, 
-                                            A.localSlice(locDom),locDom.last);
+                                            if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom),locDom.last);
                             charList = new list(leadingCharArray);  
                             gsLogger.info(getModuleName(),getRoutineName(),getLineNumber(),
                                     'adjusted locale %i for left shuffle to locale %i'.format(
                                             idx,idx-1));
                         } else {
-                            charList = new list(A.localSlice(locDom));
+                            charList = new list(if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom));
                             gsLogger.info(getModuleName(),getRoutineName(),getLineNumber(),
                                     'no left shuffle from locale %i to locale %i'.format(
                                             idx,idx-1));
@@ -1633,7 +1644,7 @@ module GenSymIO {
                 C_HDF5.H5Fclose(myFileID);
             }
 
-            const locDom = A.localSubdomain();
+            const locDom = if MyDmap == Dmap.mmapRectangular then A.domain else A.localSubdomain();
             var dims: [0..#1] C_HDF5.hsize_t;
             dims[0] = locDom.size: C_HDF5.hsize_t;
 
@@ -1658,7 +1669,11 @@ module GenSymIO {
             if locDom.size <= 0 {
                 H5LTmake_dataset_WAR(myFileID, myDsetName.c_str(), 1, c_ptrTo(dims), dType, nil);
             } else {
-                H5LTmake_dataset_WAR(myFileID, myDsetName.c_str(), 1, c_ptrTo(dims), dType, c_ptrTo(A.localSlice(locDom)));
+                if MyDmap == Dmap.mmapRectangular {
+                    halt("Need to handle this!");
+                } else {
+                    H5LTmake_dataset_WAR(myFileID, myDsetName.c_str(), 1, c_ptrTo(dims), dType, c_ptrTo(A.localSlice(locDom)));
+                }
             }
         }
         return warnFlag;
@@ -1892,10 +1907,10 @@ module GenSymIO {
                        charArraySize, A, SA) throws {
         on Locales[idx] {
             //Retrieve the chars and segs local slices (portions of arrays on this locale)
-            const locDom = A.localSubdomain();
-            const segsLocDom = SA.localSubdomain();
-            const charArray = A.localSlice(locDom);
-            const segsArray = SA.localSlice(segsLocDom);
+            const locDom = if MyDmap == Dmap.mmapRectangular then A.domain else A.localSubdomain();
+            const segsLocDom = if MyDmap == Dmap.mmapRectangular then SA.domain else SA.localSubdomain();
+            const charArray = if MyDmap == Dmap.mmapRectangular then A else A.localSlice(locDom);
+            const segsArray = if MyDmap == Dmap.mmapRectangular then SA else SA.localSlice(segsLocDom);
 
             const totalSegs = SA.size;
 

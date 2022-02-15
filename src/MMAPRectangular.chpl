@@ -673,7 +673,8 @@ class MMAPRectangularDom: BaseRectangularDom {
 
 
   proc dsiLocalSlice(ranges) {
-    halt("all dsiLocalSlice calls on MMAPRectangulars should be handled in ChapelArray.chpl");
+    var dom = MMAPRectangularDom(ranges);
+    return chpl__localSliceDefaultArithArrHelp(dom);
   }
 
   proc dsiTargetLocales() const ref {
@@ -686,7 +687,7 @@ class MMAPRectangularDom: BaseRectangularDom {
     if (this.locale == loc) {
       return _getDomain(_to_unmanaged(this));
     } else {
-      var a: domain(rank, idxType, stridable);
+      var a: MMAPRectangularDom(rank, idxType, stridable);
       return a;
     }
   }
@@ -1443,7 +1444,8 @@ class MMAPRectangularArr: BaseRectangularArr {
   }
 
   proc dsiLocalSlice(ranges) {
-    halt("all dsiLocalSlice calls on MMAPRectangulars should be handled in ChapelArray.chpl");
+    var dom = MMAPRectangularDom((...ranges));
+    return chpl__localSliceDefaultArithArrHelp(dom);
   }
 
   proc dsiGetRAD() {
@@ -1465,12 +1467,8 @@ class MMAPRectangularArr: BaseRectangularArr {
   proc dsiHasSingleLocalSubdomain() param return true;
 
   proc dsiLocalSubdomain(loc: locale) {
-    if this.data.locale == loc {
-      return _getDomain(dom);
-    } else {
       var a: domain(rank, idxType, stridable);
       return a;
-    }
   }
 
   iter dsiLocalSubdomains(loc: locale) {
@@ -1740,7 +1738,7 @@ proc chpl_serialReadWriteRectangularHelper(f, arr, dom) throws {
       arr.dsiPostReallocate();
     }
 
-  } else if arr.isMMAPRectangular() && !chpl__isArrayView(arr) &&
+  } else if !chpl__isArrayView(arr) &&
             _isSimpleIoType(arr.eltType) && f.binary() &&
             isNative && arr.isDataContiguous(dom) {
 
@@ -2384,29 +2382,5 @@ proc MMAPRectangularArr.chpl__postScan(op, res, numTasks, rngs, state) {
     writeln("res = ", res);
 }
 
-proc main() {
-  var S = {1..1024};
-  var D = S dmapped MMAPDist();
-  var A = D.buildArray(int, initElts=true);
-  var D2 = S;
-  var A2 : [D2] int;
-  A2 += 1;
-  A += 1;
-  assert(A == A2);
-  D2 = {1..2048};
-  D = {1..2048};
-  for (a1,a2,i) in zip(A, A2, D) {
-    if a1 != a2 {
-      writeln("Index ", i, ": ", a1, " != ", a2);
-      break;
-    }
-  }
-  assert(A == A2);
-  A += 1;
-  A2 += 1;
-  assert(A == A2);
-  D2 = {1..512};
-  D = {1..512};
-  assert(A == A2); 
-}
-
+override proc DefaultRectangularArr.isDefaultRectangular() param return true;
+proc type DefaultRectangularArr.isDefaultRectangular() param return true;
