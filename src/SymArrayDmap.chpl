@@ -4,10 +4,10 @@ module SymArrayDmap
     /*
      Available domain maps. Cyclic isn't regularly tested and may not work.
      */
-    enum Dmap {defaultRectangular, blockDist, cyclicDist};
+    enum Dmap {defaultRectangular, blockDist, cyclicDist, cyclicMMAPDist};
 
-    private param defaultDmap = if CHPL_COMM == "none" then Dmap.defaultRectangular
-                                                       else Dmap.blockDist;
+    private param defaultDmap = if CHPL_COMM == "none" then Dmap.cyclicMMAPDist
+                                                       else Dmap.cyclicMMAPDist;
     /*
     How domains/arrays are distributed. Defaults to :enum:`Dmap.defaultRectangular` if
     :param:`CHPL_COMM=none`, otherwise defaults to :enum:`Dmap.blockDist`.
@@ -16,6 +16,7 @@ module SymArrayDmap
 
     public use CyclicDist;
     public use BlockDist;
+    public use MMAPDist;
 
     /* 
     Makes a domain distributed according to :param:`MyDmap`.
@@ -38,6 +39,9 @@ module SymArrayDmap
             }
             when Dmap.cyclicDist {
                 return {0..#size} dmapped Cyclic(startIdx=0);
+            }
+            when Dmap.cyclicMMAPDist {
+                return {0..#size} dmapped CyclicMMAP(startIdx=0);
             }
             otherwise {
                 halt("Unsupported distribution " + MyDmap:string);
