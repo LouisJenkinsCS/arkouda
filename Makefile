@@ -129,6 +129,8 @@ ifeq ($(CHPL_VERSION_122),yes)
 CHPL_FLAGS += --instantiate-max 512
 endif
 
+CHPL_FLAGS += --print-all-candidates
+
 ZMQ_CHECK = $(DEP_INSTALL_DIR)/checkZMQ.chpl
 check-zmq: $(ZMQ_CHECK)
 	@echo "Checking for ZMQ"

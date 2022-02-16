@@ -672,9 +672,21 @@ class MMAPRectangularDom: BaseRectangularDom {
   }
 
 
+  // Needs to return a DefaultRectangularArr! Use ExternArr and set _ddata field...
+  /*
+  proc init(type eltType, param rank, type idxType,
+            param stridable,
+            dom:unmanaged MMAPRectangularDom(rank=rank, idxType=idxType,
+                                                stridable=stridable),
+            param initElts = true,
+            data:_ddata(eltType) = nil,
+            externArr = false,
+            _borrowed = false,
+            externFreeFunc: c_void_ptr = nil)
+  */
   proc dsiLocalSlice(ranges) {
-    var dom = MMAPRectangularDom(ranges);
-    return chpl__localSliceDefaultArithArrHelp(dom);
+    var dom : domain(this.ranges);
+    return dom[(...ranges)];
   }
 
   proc dsiTargetLocales() const ref {
@@ -684,12 +696,12 @@ class MMAPRectangularDom: BaseRectangularDom {
   proc dsiHasSingleLocalSubdomain() param return true;
 
   proc dsiLocalSubdomain(loc: locale) {
-    if (this.locale == loc) {
-      return _getDomain(_to_unmanaged(this));
-    } else {
-      var a: MMAPRectangularDom(rank, idxType, stridable);
-      return a;
-    }
+    var dom = defaultDist.dsiNewRectangularDom(rank=this.rank, idxType=this.idxType,
+                                               stridable=this.stridable,
+                                               inds=this.ranges);
+    var retdom = _getDomain(dom);
+    retdom._unowned=false;
+    return retdom;
   }
 
   iter dsiLocalSubdomains(loc: locale) {
@@ -1444,8 +1456,18 @@ class MMAPRectangularArr: BaseRectangularArr {
   }
 
   proc dsiLocalSlice(ranges) {
-    var dom = MMAPRectangularDom((...ranges));
-    return chpl__localSliceDefaultArithArrHelp(dom);
+    var dom = defaultDist.dsiNewRectangularDom(rank=1, idxType=this.dom.idxType, stridable=this.dom.stridable, inds=this.dom.ranges);
+    dom._free_when_no_arrs = true;
+    var arr = new unmanaged DefaultRectangularArr(eltType=eltType, rank=1,
+                                         idxType=dom.idxType,
+                                         stridable=dom.stridable,
+                                         dom=dom,
+                                         data=data,
+                                         externArr=true,
+                                         _borrowed=true);
+    dom.add_arr(arr, locking = false);
+    var a = _newArray(arr);
+    return a[(...ranges)];
   }
 
   proc dsiGetRAD() {
@@ -2382,5 +2404,9 @@ proc MMAPRectangularArr.chpl__postScan(op, res, numTasks, rngs, state) {
     writeln("res = ", res);
 }
 
-override proc DefaultRectangularArr.isDefaultRectangular() param return true;
-proc type DefaultRectangularArr.isDefaultRectangular() param return true;
+pragma "no doc"
+pragma "reference to const when const this"
+pragma "fn returns aliasing array"
+proc _array.localSlice(d : unmanaged DefaultRectangularDom) where isSubtype(_value.type, MMAPRectangularArr) {
+  return _value.dsiLocalSlice(d.dsiGetIndices());
+}
