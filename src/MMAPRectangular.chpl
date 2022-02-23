@@ -22,7 +22,7 @@
 import HaltWrappers;
 private use SysCTypes;
 private use Sys;  
-extern proc open(name: c_string, flags: c_int): c_int;
+extern proc open(name: c_string, flags: c_int, mode: c_int): c_int;
 extern proc fread(data:c_void_ptr, size: int, n: int, f: c_void_ptr): int;
 extern proc fwrite(data:c_void_ptr, size: int, n: int, f: c_void_ptr): int;
 extern proc close(fd: c_int) : int;
@@ -1241,7 +1241,7 @@ class MMAPRectangularArr: BaseRectangularArr {
 
     assert(data == nil, "MMAP Array does not support passing in existing data...");
     fname = mmapFilePrefix + "tester-" + uniqueFileSuffix.fetchAdd(1):string + ".do-not-checkpoint";
-    fd = open(fname.c_str(), O_RDWR | O_CREAT);
+    fd = open(fname.c_str(), O_RDWR | O_CREAT, 0666);
     assert(fd != -1, "Failed to open: '", fname, "'");
     var ret = ftruncate(fd, size * c_sizeof(eltType):int); // Make file exact requested size
     assert(ret == 0, "Unable to truncate file: '", fname, "' to size of ", size * c_sizeof(eltType):int, " bytes!");
