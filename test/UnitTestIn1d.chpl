@@ -15,7 +15,7 @@ prototype module UnitTestIn1d
       coforall loc in Locales {
         on loc {
           var R = new owned RandomStream(real); R.getNext();
-          [i in a.localSubdomain()] a[i] = (R.getNext() * (aMax -aMin) + aMin):t;
+          [i in a.domain] a[i] = (R.getNext() * (aMax -aMin) + aMin):t;
         }
       }
       d.stop("fillRandInt");

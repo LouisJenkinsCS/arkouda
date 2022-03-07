@@ -58,9 +58,9 @@ module PerLocaleReduction {
       var iv: [aD] int;
       coforall loc in Locales {
           on loc {
-              var toSort = [(v, i) in zip(a.localSlice[a.localSubdomain()], a.localSubdomain())] (v, i);
+              var toSort = [(v, i) in zip(a[a.domain], a.domain)] (v, i);
               Sort.sort(toSort);
-              iv.localSlice[iv.localSubdomain()] = [(v, i) in toSort] i;
+              iv[iv.domain] = [(v, i) in toSort] i;
           }
       }
       return iv;
@@ -70,9 +70,9 @@ module PerLocaleReduction {
       var iv: [aD] int;
       coforall loc in Locales {
         on loc {
-          //ref myIV = iv[iv.localSubdomain()];
-          var myIV: [0..#iv.localSubdomain().size] int;
-          ref myA = a.localSlice[a.localSubdomain()];
+          //ref myIV = iv[iv.domain];
+          var myIV: [0..#iv.domain.size] int;
+          ref myA = a[a.domain];
           // Calculate number of histogram bins
           var locMin = min reduce myA;
           var locMax = max reduce myA;
@@ -84,7 +84,7 @@ module PerLocaleReduction {
             if (v && here.id==0) {try! writeln("bins %i > %i; using localAssocArgSort".format(bins, mBins));}
             localAssocArgSort(myIV, myA);
           }
-          iv.localSlice[iv.localSubdomain()] = myIV;
+          iv[iv.domain] = myIV;
         }
       }
       return iv;
@@ -189,7 +189,7 @@ module PerLocaleReduction {
       var localSegments: [PrivateSpace] Segments;
       coforall loc in Locales {
         on loc {
-          var (locSegs, locUkeys) = segsAndUkeysFromSortedArray(perLocSorted.localSlice[perLocSorted.localSubdomain()]);
+          var (locSegs, locUkeys) = segsAndUkeysFromSortedArray(perLocSorted[perLocSorted.domain]);
           localSegments[here.id] = new Segments(locUkeys, locSegs);
           forall k in locUkeys with (ref globalRelKeys, var agg = newDstAggregator(bool)) {
             // This does not need to be atomic, because race conditions will result in the correct answer
@@ -221,11 +221,11 @@ module PerLocaleReduction {
           ref mySeg = localSegments[here.id].s;
           ref myKey = localSegments[here.id].k;
           forall (offset, key) in zip(mySeg, myKey) {
-            var segInd = globalSegments.localSubdomain().low + relKey2ind[key - minKey];
+            var segInd = globalSegments.domain.low + relKey2ind[key - minKey];
             globalSegments[segInd] = offset;
           }
-          var last = D.localSubdomain().high + 1;
-          for i in globalSegments.localSubdomain() by -1 {
+          var last = D.domain.high + 1;
+          for i in globalSegments.domain by -1 {
             if globalSegments[i] == -1 {
               globalSegments[i] = last;
             } else {
@@ -273,8 +273,8 @@ module PerLocaleReduction {
       var localCounts: [PrivateSpace] [0..#numKeys] int;
       coforall loc in Locales {
         on loc {
-          localCounts[here.id] = segCount(segments.localSlice[D.localSubdomain()],
-                                          origD.localSubdomain().high + 1);
+          localCounts[here.id] = segCount(segments[D.domain],
+                                          origD.domain.high + 1);
         }
       }
       var counts: [keyDom] int = + reduce [i in PrivateSpace] localCounts[i];
@@ -425,8 +425,8 @@ module PerLocaleReduction {
       coforall loc in Locales {
         on loc {
           // Each locale reduces its local slice of <values>
-          perLocVals[here.id] = segSum(values.localSlice[values.localSubdomain()],
-                                       segments.localSlice[D.localSubdomain()]);
+          perLocVals[here.id] = segSum(values[values.domain],
+                                       segments[D.domain]);
         }
       }
       // The global result is a distributed array, computed as a vector reduction over local results
@@ -440,8 +440,8 @@ module PerLocaleReduction {
       var perLocVals: [PrivateSpace] [0..#numKeys] int;
       coforall loc in Locales {
         on loc {
-          perLocVals[here.id] = segSum(values.localSlice[values.localSubdomain()],
-                                       segments.localSlice[D.localSubdomain()]);
+          perLocVals[here.id] = segSum(values[values.domain],
+                                       segments[D.domain]);
         }
       }
       var res:[keyDom] int = + reduce [i in PrivateSpace] perLocVals[i];
@@ -454,8 +454,8 @@ module PerLocaleReduction {
       var perLocVals: [PrivateSpace] [0..#numKeys] real;
       coforall loc in Locales {
         on loc {
-          perLocVals[here.id] = segProduct(values.localSlice[values.localSubdomain()],
-                                           segments.localSlice[D.localSubdomain()]);
+          perLocVals[here.id] = segProduct(values[values.domain],
+                                           segments[D.domain]);
         }
       }
       var res: [keyDom] real = * reduce [i in PrivateSpace] perLocVals[i];
@@ -475,8 +475,8 @@ module PerLocaleReduction {
       var perLocVals: [PrivateSpace] [0..#numKeys] t;
       coforall loc in Locales {
         on loc {
-          perLocVals[here.id] = segMin(values.localSlice[values.localSubdomain()],
-                                       segments.localSlice[D.localSubdomain()]);
+          perLocVals[here.id] = segMin(values[values.domain],
+                                       segments[D.domain]);
         }
       }
       var res: [keyDom] t;
@@ -492,8 +492,8 @@ module PerLocaleReduction {
       var perLocVals: [PrivateSpace] [0..#numKeys] t;
       coforall loc in Locales {
         on loc {
-          perLocVals[here.id] = segMax(values.localSlice[values.localSubdomain()],
-                                       segments.localSlice[D.localSubdomain()]);
+          perLocVals[here.id] = segMax(values[values.domain],
+                                       segments[D.domain]);
         }
       }
       var res: [keyDom] t;
@@ -510,8 +510,8 @@ module PerLocaleReduction {
       var perLocLocs: [PrivateSpace] [0..#numKeys] int;
       coforall loc in Locales {
         on loc {
-          (perLocVals[here.id], perLocLocs[here.id]) = segArgmin(values.localSlice[values.localSubdomain()],
-                                                                 segments.localSlice[D.localSubdomain()]);
+          (perLocVals[here.id], perLocLocs[here.id]) = segArgmin(values[values.domain],
+                                                                 segments[D.domain]);
         }
       }
       var res: [keyDom] int;
@@ -530,8 +530,8 @@ module PerLocaleReduction {
       var perLocLocs: [PrivateSpace] [0..#numKeys] int;
       coforall loc in Locales {
         on loc {
-          (perLocVals[here.id], perLocLocs[here.id]) = segArgmax(values.localSlice[values.localSubdomain()],
-                                                                 segments.localSlice[D.localSubdomain()]);
+          (perLocVals[here.id], perLocLocs[here.id]) = segArgmax(values[values.domain],
+                                                                 segments[D.domain]);
         }
       }
       var res: [keyDom] int;
@@ -549,8 +549,8 @@ module PerLocaleReduction {
       var perLocVals: [PrivateSpace] [0..#numKeys] bool;
       coforall loc in Locales {
         on loc {
-          perLocVals[here.id] = segAny(values.localSlice[values.localSubdomain()],
-                                       segments.localSlice[D.localSubdomain()]);
+          perLocVals[here.id] = segAny(values[values.domain],
+                                       segments[D.domain]);
         }
       }
       var res: [keyDom] bool;
@@ -566,8 +566,8 @@ module PerLocaleReduction {
       var perLocVals: [PrivateSpace] [0..#numKeys] bool;
       coforall loc in Locales {
         on loc {
-          perLocVals[here.id] = segAll(values.localSlice[values.localSubdomain()],
-                                       segments.localSlice[D.localSubdomain()]);
+          perLocVals[here.id] = segAll(values[values.domain],
+                                       segments[D.domain]);
         }
       }
       var res: [keyDom] bool;
@@ -595,17 +595,17 @@ module PerLocaleReduction {
       var globalValFlags: [valDom] bool;
       coforall loc in Locales {
         on loc {
-          var myD = D.localSubdomain();
-          forall (i, low) in zip(myD, segments.localSlice[myD]) {
+          var myD = D.domain;
+          forall (i, low) in zip(myD, segments[myD]) {
             var high: int;
             if (i < myD.high) {
               high = segments[i+1] - 1;
             } else {
-              high = values.localSubdomain().high;
+              high = values.domain.high;
             }
             if (high >= low) {
               var perm: [0..#(high-low+1)] int;
-              ref myVals = values.localSlice[low..high];
+              ref myVals = values[low..high];
               var myMin = min reduce myVals;
               var myRange = (max reduce myVals) - myMin + 1;
               localHistArgSort(perm, myVals, myMin, myRange);
@@ -633,17 +633,17 @@ module PerLocaleReduction {
       var localUvals: [PrivateSpace] [0..#numKeys] domain(int, parSafe=false);
       coforall loc in Locales {
         on loc {
-          var myD = D.localSubdomain();
-          forall (i, low) in zip(myD, segments.localSlice[myD]) {
+          var myD = D.domain;
+          forall (i, low) in zip(myD, segments[myD]) {
             var high: int;
             if (i < myD.high) {
               high = segments[i+1] - 1;
             } else {
-              high = values.localSubdomain().high;
+              high = values.domain.high;
             }
             if (high >= low) {
               var perm: [0..#(high-low+1)] int;
-              ref myVals = values.localSlice[low..high];
+              ref myVals = values[low..high];
               var myMin = min reduce myVals;
               var myRange = (max reduce myVals) - myMin + 1;
               localHistArgSort(perm, myVals, myMin, myRange);

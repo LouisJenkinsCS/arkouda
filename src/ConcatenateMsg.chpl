@@ -111,7 +111,7 @@ module ConcatenateMsg
               const dummyDomain = makeDistDom(g.size);
               coforall loc in Locales {
                 on loc {
-                  const mynumsegs = dummyDomain.localSubdomain().size;
+                  const mynumsegs = dummyDomain.domain.size;
                   blocksizes[here.id] += mynumsegs;
                   /* If the size of the array is less than the number of locales,
                    * some locales will have no segments. For those locales, skip
@@ -121,17 +121,17 @@ module ConcatenateMsg
                    */
                   if (objtype == "str") && (mynumsegs > 0) {
                     const e = toSymEntry(g, int);
-                    const firstSeg = e.a[e.aD.localSubdomain().low];
+                    const firstSeg = e.a[e.aD.domain.low];
                     var mybytes: int;
                     /* If this locale contains the last segment, we cannot use the
                      * next segment offset to calculate the number of bytes for this
                      * locale, and we must instead use the total size of the values
                      * array.
                      */
-                    if (e.aD.localSubdomain().high >= e.aD.high) {
+                    if (e.aD.domain.high >= e.aD.high) {
                       mybytes = valSize - firstSeg;
                     } else {
-                      mybytes = e.a[e.aD.localSubdomain().high + 1] - firstSeg;
+                      mybytes = e.a[e.aD.domain.high + 1] - firstSeg;
                     }
                     blockValSizes[here.id] += mybytes;
                   }
@@ -172,24 +172,24 @@ module ConcatenateMsg
                       coforall loc in Locales {
                         on loc {
                           // Number of strings on this locale for this input array
-                          const mynsegs = thisSegs.aD.localSubdomain().size;
+                          const mynsegs = thisSegs.aD.domain.size;
                           // If no strings on this locale, skip to avoid out of bounds array
                           // accesses
                           if mynsegs > 0 {
-                            ref mysegs = thisSegs.a.localSlice[thisSegs.aD.localSubdomain()];
+                            ref mysegs = thisSegs.a[thisSegs.aD.domain];
                             // Segments must be rebased to start from blockValStart,
                             // which is the current pointer to this locale's chunk of
                             // the values array
-                            esegs.a[{blockstarts[here.id]..#mynsegs}] = mysegs - mysegs[thisSegs.aD.localSubdomain().low] + blockValStarts[here.id];
+                            esegs.a[{blockstarts[here.id]..#mynsegs}] = mysegs - mysegs[thisSegs.aD.domain.low] + blockValStarts[here.id];
                             blockstarts[here.id] += mynsegs;
-                            const firstSeg = thisSegs.a[thisSegs.aD.localSubdomain().low];
+                            const firstSeg = thisSegs.a[thisSegs.aD.domain.low];
                             var mybytes: int;
                             // If locale contains last string, must use overall number of bytes
                             // to compute size, instead of start of next string
-                            if (thisSegs.aD.localSubdomain().high >= thisSegs.aD.high) {
+                            if (thisSegs.aD.domain.high >= thisSegs.aD.high) {
                               mybytes = thisVals.size - firstSeg;
                             } else {
-                              mybytes = thisSegs.a[thisSegs.aD.localSubdomain().high + 1] - firstSeg;
+                              mybytes = thisSegs.a[thisSegs.aD.domain.high + 1] - firstSeg;
                             }
                             evals.a[{blockValStarts[here.id]..#mybytes}] = thisVals.a[firstSeg..#mybytes];
                             blockValStarts[here.id] += mybytes;
@@ -228,8 +228,8 @@ module ConcatenateMsg
                             if mode == "interleave" {
                               coforall loc in Locales {
                                 on loc {
-                                  const size = o.aD.localSubdomain().size;
-                                  e.a[{blockstarts[here.id]..#size}] = o.a.localSlice[o.aD.localSubdomain()];
+                                  const size = o.aD.domain.size;
+                                  e.a[{blockstarts[here.id]..#size}] = o.a[o.aD.domain];
                                   blockstarts[here.id] += size;
                                 }
                               }
@@ -257,8 +257,8 @@ module ConcatenateMsg
                             if mode == "interleave" {
                               coforall loc in Locales {
                                 on loc {
-                                  const size = o.aD.localSubdomain().size;
-                                  e.a[{blockstarts[here.id]..#size}] = o.a.localSlice[o.aD.localSubdomain()];
+                                  const size = o.aD.domain.size;
+                                  e.a[{blockstarts[here.id]..#size}] = o.a[o.aD.domain];
                                   blockstarts[here.id] += size;
                                 }
                               }
@@ -286,8 +286,8 @@ module ConcatenateMsg
                             if mode == "interleave" {
                               coforall loc in Locales {
                                 on loc {
-                                  const size = o.aD.localSubdomain().size;
-                                  e.a[{blockstarts[here.id]..#size}] = o.a.localSlice[o.aD.localSubdomain()];
+                                  const size = o.aD.domain.size;
+                                  e.a[{blockstarts[here.id]..#size}] = o.a[o.aD.domain];
                                   blockstarts[here.id] += size;
                                 }
                               }

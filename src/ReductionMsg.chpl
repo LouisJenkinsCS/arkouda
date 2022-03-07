@@ -91,7 +91,7 @@ module ReductionMsg
                       var locSorted: [LocaleSpace] bool;
                       coforall loc in Locales {
                         on loc {
-                          ref myA = e.a[e.a.localSubdomain()];
+                          ref myA = e.a[e.a.domain];
                           locSorted[here.id] = isSorted(myA);
                         }
                       }

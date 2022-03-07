@@ -1220,7 +1220,7 @@ module SegmentedArray {
             mySet += h;
           }
           /* // Check membership of hashes in this locale's chunk of the array */
-          /* [i in truth.localSubdomain()] truth[i] = mySet.contains(hashes[i]); */
+          /* [i in truth.domain] truth[i] = mySet.contains(hashes[i]); */
         }
       }
       if logLevel == LogLevel.DEBUG {

@@ -87,14 +87,14 @@ prototype module UnitTestFindSegments
           var locChecked = 0;
           var myKeys = ukeys;
           local {
-            var segDom = segs.localSubdomain();
+            var segDom = segs.domain;
             var truths:[segDom] bool;
             forall segInd in segDom with (ref truths, + reduce locChecked) {
               var key = myKeys[segInd - segDom.low];
               var low = segs[segInd];
               var high: int;
-              if (segInd == segDom.high) || (segs[segInd + 1] > sorted.localSubdomain().high) {
-                high = sorted.localSubdomain().high;
+              if (segInd == segDom.high) || (segs[segInd + 1] > sorted.domain.high) {
+                high = sorted.domain.high;
               } else {
                 high = segs[segInd + 1] - 1;
               }

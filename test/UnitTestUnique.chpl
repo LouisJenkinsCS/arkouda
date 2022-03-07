@@ -13,7 +13,7 @@ prototype module UnitTestUnique
       coforall loc in Locales {
         on loc {
           var R = new owned RandomStream(real); R.getNext();
-          for i in a.localSubdomain() { a[i] = (R.getNext() * (aMax -aMin) + aMin):t; }
+          for i in a.domain { a[i] = (R.getNext() * (aMax -aMin) + aMin):t; }
         }
       }
       d.stop("fillRandInt");
@@ -25,7 +25,7 @@ prototype module UnitTestUnique
       coforall loc in Locales {
         on loc {
           var R = new owned RandomStream(real); R.getNext();
-          for i in a.localSubdomain() {
+          for i in a.domain {
             var vi = (R.getNext() * ((bD.high+1) - bD.low) + bD.low):int;//is this right????
             a[i] = b[vi];
           }

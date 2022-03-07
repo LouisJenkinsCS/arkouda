@@ -33,7 +33,7 @@ module testSplitRadixSort
         proc printOwnership(x) {
             for loc in Locales do
                 on loc do
-                    write(x.localSubdomain(), " ");
+                    write(x.domain, " ");
             writeln();
         }
         

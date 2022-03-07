@@ -216,7 +216,7 @@ module Unique
     /*             var uniqCounts: [uniqSet[here.id]] atomic int; */
 
     /*             // count local part of array's values into per-locale private atomic counter set */
-    /*             [i in a.localSubdomain()] uniqCounts[a[i]].add(1); */
+    /*             [i in a.domain] uniqCounts[a[i]].add(1); */
 
     /*             // add local counts for unique value to global histogram */
     /*             [val in uniqSet[here.id]] atomicHist[val - aMin].add(uniqCounts[val].read()); */
@@ -309,7 +309,7 @@ module Unique
     /*             var uniqCounts: [uniqSet[here.id]] atomic int; */
 
     /*             // count locale part of array's values into per-locale private atomic counter set */
-    /*             [i in a.localSubdomain()] uniqCounts[a[i]].add(1); */
+    /*             [i in a.domain] uniqCounts[a[i]].add(1); */
 
     /*             // accumulate into global counters */
     /*             [val in uniqSet[here.id]] globalUniqCounts[val].add(uniqCounts[val].read()); */
@@ -362,7 +362,7 @@ module Unique
     /*     coforall loc in Locales { */
     /*         on loc { */
     /*             // serially add to this locale's assoc domain of int */
-    /*             for i in a.localSubdomain() { uniqSet[here.id] += a[i]; } */
+    /*             for i in a.domain { uniqSet[here.id] += a[i]; } */
     /*         } */
     /*     } */
         
@@ -395,7 +395,7 @@ module Unique
     /*             var uniqCounts: [uniqSet[here.id]] atomic int; */
 
     /*             // count locale part of array's values into per-locale private atomic counter set */
-    /*             [i in a.localSubdomain()] uniqCounts[a[i]].add(1); */
+    /*             [i in a.domain] uniqCounts[a[i]].add(1); */
 
     /*             // accumulate into global counters */
     /*             [val in uniqSet[here.id]] globalUniqCounts[val].add(uniqCounts[val].read()); */

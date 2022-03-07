@@ -64,7 +64,7 @@ module SegStringSort {
                    "Partitioned short/long strings in %t seconds".format(getCurrentTime() - t));
     on Locales[Locales.domain.high] {
       var tl = getCurrentTime();
-      const ref highDom = {longStart..ss.offsets.aD.high};
+      const highDom = {longStart..ss.offsets.aD.high};
       ref highInds = gatherInds[highDom];
       // Get local copy of the long strings as Chapel strings, and their original indices
       var stringsWithInds = gatherLongStrings(ss, lengths, highInds);
@@ -80,8 +80,10 @@ module SegStringSort {
                              "Sorted long strings in %t seconds".format(getCurrentTime() - tl));
       tl = getCurrentTime();
 
-      forall (h, s) in zip(highDom, stringsWithInds.domain) with (var agg = newDstAggregator(int)) {
-        const (_,val) = stringsWithInds[s];
+      const ssDom = {stringsWithInds.domain.low..stringsWithInds.domain.high by stringsWithInds.domain.stride};
+      compilerWarning("Type of highDom is " + highDom.type:string + " and type of ssDom is " + ssDom.type:string);
+      forall (h, s) in zip(highDom, ssDom) with (var agg = newDstAggregator(int)) {
+        local do const (_,val) = stringsWithInds[s];
         agg.copy(gatherInds[h], val);
       }
       ssLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
@@ -106,8 +108,8 @@ module SegStringSort {
       var pBins: [PrivateSpace][BINDOM] int;
       coforall loc in Locales {
         on loc {
-          const lD = D.localSubdomain();
-          ref locLengths = lengths.localSlice[lD];
+          const lD = D.domain;
+          ref locLengths = lengths[lD];
           var locBins: [0..#numTasks][BINDOM] int;
           coforall task in 0..#numTasks {
             const tD = calcBlock(task, lD.low, lD.high);
@@ -126,7 +128,7 @@ module SegStringSort {
       overMemLimit(numBytes(int) * bins.size);
       const tailPop = (+ reduce bins) - (+ scan bins) + bins;
       // Find the largest value of "long" such that long strings fit in one local subdomain
-      const singleLocale = (tailPop < (MEMFACTOR * D.localSubdomain().size));
+      const singleLocale = (tailPop < (MEMFACTOR * D.domain.size));
       var (dummy, pivot) = maxloc reduce zip(singleLocale, BINDOM);
       // Pivot should be even and not less than MINBYTES
       pivot = max(pivot + (pivot % 2), MINBYTES);
@@ -237,7 +239,7 @@ module SegStringSort {
             // allocate counts
             var taskBucketCounts: [bD] int;
             // get local domain's indices
-            var lD = kr0.localSubdomain();
+            var lD = kr0.domain;
             // calc task's indices from local domain's indices
             var tD = calcBlock(task, lD.low, lD.high);
             // count digits in this task's part of the array
@@ -272,7 +274,7 @@ module SegStringSort {
             // allocate counts
             var taskBucketPos: [bD] int;
             // get local domain's indices
-            var lD = kr0.localSubdomain();
+            var lD = kr0.domain;
             // calc task's indices from local domain's indices
             var tD = calcBlock(task, lD.low, lD.high);
             // read start pos in to globalStarts back from transposed order

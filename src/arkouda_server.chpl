@@ -313,18 +313,18 @@ proc main() {
                 when "setdiff1d"         {repTuple = setdiff1dMsg(cmd, args, st);}
                 when "setxor1d"          {repTuple = setxor1dMsg(cmd, args, st);}
                 when "union1d"           {repTuple = union1dMsg(cmd, args, st);}
-                when "segmentLengths"    {repTuple = segmentLengthsMsg(cmd, args, st);}
-                when "segmentedHash"     {repTuple = segmentedHashMsg(cmd, args, st);}
-                when "segmentedEfunc"    {repTuple = segmentedEfuncMsg(cmd, args, st);}
-                when "segmentedFindLoc"  {repTuple = segmentedFindLocMsg(cmd, args, st);}
-                when "segmentedFindAll"  {repTuple = segmentedFindAllMsg(cmd, args, st);}
-                when "segmentedPeel"     {repTuple = segmentedPeelMsg(cmd, args, st);}
-                when "segmentedIndex"    {repTuple = segmentedIndexMsg(cmd, args, st);}
-                when "segmentedBinopvv"  {repTuple = segBinopvvMsg(cmd, args, st);}
-                when "segmentedBinopvs"  {repTuple = segBinopvsMsg(cmd, args, st);}
-                when "segmentedGroup"    {repTuple = segGroupMsg(cmd, args, st);}
-                when "segmentedIn1d"     {repTuple = segIn1dMsg(cmd, args, st);}
-                when "segmentedFlatten"  {repTuple = segFlattenMsg(cmd, args, st);}
+                // when "segmentLengths"    {repTuple = segmentLengthsMsg(cmd, args, st);}
+                // when "segmentedHash"     {repTuple = segmentedHashMsg(cmd, args, st);}
+                // when "segmentedEfunc"    {repTuple = segmentedEfuncMsg(cmd, args, st);}
+                // when "segmentedFindLoc"  {repTuple = segmentedFindLocMsg(cmd, args, st);}
+                // when "segmentedFindAll"  {repTuple = segmentedFindAllMsg(cmd, args, st);}
+                // when "segmentedPeel"     {repTuple = segmentedPeelMsg(cmd, args, st);}
+                // when "segmentedIndex"    {repTuple = segmentedIndexMsg(cmd, args, st);}
+                // when "segmentedBinopvv"  {repTuple = segBinopvvMsg(cmd, args, st);}
+                // when "segmentedBinopvs"  {repTuple = segBinopvsMsg(cmd, args, st);}
+                // when "segmentedGroup"    {repTuple = segGroupMsg(cmd, args, st);}
+                // when "segmentedIn1d"     {repTuple = segIn1dMsg(cmd, args, st);}
+                // when "segmentedFlatten"  {repTuple = segFlattenMsg(cmd, args, st);}
                 when "lshdf"             {repTuple = lshdfMsg(cmd, args, st);}
                 when "readAllHdf"        {repTuple = readAllHdfMsg(cmd, args, st);}
                 when "tohdf"             {repTuple = tohdfMsg(cmd, args, st);}
@@ -342,8 +342,8 @@ proc main() {
                 when "efunc3ss"          {repTuple = efunc3ssMsg(cmd, args, st);}
                 when "reduction"         {repTuple = reductionMsg(cmd, args, st);}
                 when "countReduction"    {repTuple = countReductionMsg(cmd, args, st);}
-                when "findSegments"      {repTuple = findSegmentsMsg(cmd, args, st);}
-                when "segmentedReduction"{repTuple = segmentedReductionMsg(cmd, args, st);}
+                // when "findSegments"      {repTuple = findSegmentsMsg(cmd, args, st);}
+                // when "segmentedReduction"{repTuple = segmentedReductionMsg(cmd, args, st);}
                 when "broadcast"         {repTuple = broadcastMsg(cmd, args, st);}
                 when "arange"            {repTuple = arangeMsg(cmd, args, st);}
                 when "linspace"          {repTuple = linspaceMsg(cmd, args, st);}
@@ -366,8 +366,8 @@ proc main() {
                 when "[pdarray]=pdarray" {repTuple = setPdarrayIndexToPdarrayMsg(cmd, args, st);}
                 when "[slice]=val"       {repTuple = setSliceIndexToValueMsg(cmd, args, st);}
                 when "[slice]=pdarray"   {repTuple = setSliceIndexToPdarrayMsg(cmd, args, st);}
-                when "argsort"           {repTuple = argsortMsg(cmd, args, st);}
-                when "coargsort"         {repTuple = coargsortMsg(cmd, args, st);}
+                // when "argsort"           {repTuple = argsortMsg(cmd, args, st);}
+                // when "coargsort"         {repTuple = coargsortMsg(cmd, args, st);}
                 when "concatenate"       {repTuple = concatenateMsg(cmd, args, st);}
                 when "sort"              {repTuple = sortMsg(cmd, args, st);}
                 when "joinEqWithDT"      {repTuple = joinEqWithDTMsg(cmd, args, st);}

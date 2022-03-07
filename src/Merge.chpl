@@ -35,7 +35,7 @@ module Merge {
   //const numTasks = RadixSortLSD.numTasks;
   inline proc findStart(loc, task, s: SegString) throws {
       ref va = s.values.a;
-      const lD = va.localSubdomain();
+      const lD = va.domain;
       const tD = RadixSortLSD.calcBlock(task, lD.low, lD.high);
       const i = tD.low;
       ref oa = s.offsets.a;

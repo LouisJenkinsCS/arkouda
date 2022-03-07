@@ -130,7 +130,7 @@ module CountingSort
                 var atomicHist: [hD] atomic int;
 
                 // count number of each value into local atomic histogram
-                [i in a.localSubdomain()] atomicHist[a[i]-aMin].add(1);
+                [i in a.domain] atomicHist[a[i]-aMin].add(1);
 
                 // put counts into globalCounts array
                 [i in hD] globalCounts[i * numLocales + here.id] = atomicHist[i].read();
@@ -154,14 +154,14 @@ module CountingSort
                 var atomicHist: [hD] atomic int;
 
                 // local storage to sort into
-                var localBuffer: [0..#(a.localSubdomain().size)] int;
+                var localBuffer: [0..#(a.domain.size)] int;
 
                 // put locale-bucket-ends into atomic hist
                 [i in hD] atomicHist[i].write(localEnds[i] - localCounts[i]);
                 
                 // get position in localBuffer of each element and place it there
                 // counting up to local-bucket-end
-                [idx in a.localSubdomain()] {
+                [idx in a.domain] {
                     var pos = atomicHist[a[idx]-aMin].fetchAdd(1); // local pos in localBuffer
                     localBuffer[pos] = idx; // should be local pos and global idx
                 }
@@ -252,11 +252,11 @@ module CountingSort
                 [i in hD] atomicHist[here.id][i].write(localEnds[here.id][i] - localCounts[here.id][i]);
                 
                 // local storage to sort into
-                var localBuffer: [0..#(a.localSubdomain().size)] int;
+                var localBuffer: [0..#(a.domain.size)] int;
 
                 // get position in localBuffer of each element and place it there
                 // counting up to local-bucket-end
-                [idx in a.localSubdomain()] {
+                [idx in a.domain] {
                     var pos = atomicHist[here.id][a[idx]-aMin].fetchAdd(1); // local pos in localBuffer
                     localBuffer[pos] = idx; // should be local pos and global idx
                 }
@@ -353,7 +353,7 @@ module CountingSort
             on loc {
                 // fetch-and-inc to get per-locale-subbin-position
                 // and directly write index to output array
-                forall i in a.localSubdomain() {
+                forall i in a.domain {
                     var idx = i;
                     var pos = atomicHist[here.id][a[idx]-aMin].fetchAdd(1); // local pos in localBuffer
                     unorderedCopy(iv[pos],idx); // iv[pos] = idx; // should be global pos and global idx
@@ -373,7 +373,7 @@ module CountingSort
         coforall loc in Locales {
             on loc {
                 var R = new owned RandomStream(real); R.getNext();
-                [i in a.localSubdomain()] a[i] = (R.getNext() * (aMax - aMin) + aMin):int;
+                [i in a.domain] a[i] = (R.getNext() * (aMax - aMin) + aMin):int;
             }
         }
         writeln("compute time = ",Time.getCurrentTime() - t1,"sec"); try! stdout.flush();

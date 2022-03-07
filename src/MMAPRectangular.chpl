@@ -134,10 +134,6 @@ class MMAPRectangularDom: BaseRectangularDom {
   override proc linksDistribution() param return false;
   override proc dsiLinksDistribution()     return false;
 
-  override proc type isDefaultRectangular() param return false;
-  override proc isDefaultRectangular() param return false;
-
-
   proc init(param rank, type idxType, param stridable, dist) {
     super.init(rank, idxType, stridable);
     this.dist = dist;
@@ -684,16 +680,16 @@ class MMAPRectangularDom: BaseRectangularDom {
             _borrowed = false,
             externFreeFunc: c_void_ptr = nil)
   */
-  proc dsiLocalSlice(ranges) {
-    var dom : domain(this.ranges);
-    return dom[(...ranges)];
-  }
+  // proc dsiLocalSlice(ranges) {
+  //   var dom : domain(this.ranges);
+  //   return dom[(...ranges)];
+  // }
 
   proc dsiTargetLocales() const ref {
     return chpl_getSingletonLocaleArray(this.locale);
   }
 
-  proc dsiHasSingleLocalSubdomain() param return true;
+  // proc dsiHasSingleLocalSubdomain() param return true;
 
   proc dsiLocalSubdomain(loc: locale) {
     var dom = defaultDist.dsiNewRectangularDom(rank=this.rank, idxType=this.idxType,
@@ -704,9 +700,9 @@ class MMAPRectangularDom: BaseRectangularDom {
     return retdom;
   }
 
-  iter dsiLocalSubdomains(loc: locale) {
-    yield dsiLocalSubdomain(loc);
-  }
+  // iter dsiLocalSubdomains(loc: locale) {
+  //   yield dsiLocalSubdomain(loc);
+  // }
 
   // convenience routine for turning an int (tuple) into an index (tuple)
   inline proc chpl_intToIdx(i) {
@@ -1455,20 +1451,20 @@ class MMAPRectangularArr: BaseRectangularArr {
     // No action necessary here
   }
 
-  proc dsiLocalSlice(ranges) {
-    var dom = defaultDist.dsiNewRectangularDom(rank=1, idxType=this.dom.idxType, stridable=this.dom.stridable, inds=this.dom.ranges);
-    dom._free_when_no_arrs = true;
-    var arr = new unmanaged DefaultRectangularArr(eltType=eltType, rank=1,
-                                         idxType=dom.idxType,
-                                         stridable=dom.stridable,
-                                         dom=dom,
-                                         data=data,
-                                         externArr=true,
-                                         _borrowed=true);
-    dom.add_arr(arr, locking = false);
-    var a = _newArray(arr);
-    return a[(...ranges)];
-  }
+  // proc dsiLocalSlice(ranges) {
+  //   var dom = defaultDist.dsiNewRectangularDom(rank=1, idxType=this.dom.idxType, stridable=this.dom.stridable, inds=this.dom.ranges);
+  //   dom._free_when_no_arrs = true;
+  //   var arr = new unmanaged DefaultRectangularArr(eltType=eltType, rank=1,
+  //                                        idxType=dom.idxType,
+  //                                        stridable=dom.stridable,
+  //                                        dom=dom,
+  //                                        data=data,
+  //                                        externArr=true,
+  //                                        _borrowed=true);
+  //   dom.add_arr(arr, locking = false);
+  //   var a = _newArray(arr);
+  //   return a;
+  // }
 
   proc dsiGetRAD() {
     var rad: _remoteAccessData(eltType, rank, idxType, stridable);
@@ -1488,14 +1484,14 @@ class MMAPRectangularArr: BaseRectangularArr {
 
   proc dsiHasSingleLocalSubdomain() param return true;
 
-  proc dsiLocalSubdomain(loc: locale) {
-      var a: domain(rank, idxType, stridable);
-      return a;
-  }
+  // proc dsiLocalSubdomain(loc: locale) {
+  //     var a: domain(rank, idxType, stridable);
+  //     return a;
+  // }
 
-  iter dsiLocalSubdomains(loc: locale) {
-    yield dsiLocalSubdomain(loc);
-  }
+  // iter dsiLocalSubdomains(loc: locale) {
+  //   yield dsiLocalSubdomain(loc);
+  // }
 
   override proc dsiIteratorYieldsLocalElements() param {
     return true;
@@ -1714,7 +1710,7 @@ proc chpl_serialReadWriteRectangularHelper(f, arr, dom) throws {
           // Continue on if we didn't read a closing bracket.
         }
       } else {
-
+        // 
         // Try reading a comma/space. Break if we don't read one.
         try {
           if isspace then f <~> new ioLiteral(" ");
@@ -2404,9 +2400,13 @@ proc MMAPRectangularArr.chpl__postScan(op, res, numTasks, rngs, state) {
     writeln("res = ", res);
 }
 
-pragma "no doc"
-pragma "reference to const when const this"
-pragma "fn returns aliasing array"
-proc _array.localSlice(d : unmanaged DefaultRectangularDom) where isSubtype(_value.type, MMAPRectangularArr) {
-  return _value.dsiLocalSlice(d.dsiGetIndices());
+// pragma "no doc"
+// pragma "reference to const when const this"
+// pragma "fn returns aliasing array"
+// proc _array.localSlice(d : unmanaged DefaultRectangularDom) where isSubtype(_value.type, MMAPRectangularArr) {
+//   return _value.dsiLocalSlice(d.dsiGetIndices());
+// }
+
+proc _domain._dom {
+  return this;
 }

@@ -174,7 +174,7 @@ module RadixSortLSDTuple
                         // allocate counts
                         var taskBucketCounts: [bD] int;
                         // get local domain's indices
-                        var lD = kr0.localSubdomain();
+                        var lD = kr0.domain;
                         // calc task's indices from local domain's indices
                         var tD = calcBlock(task, lD.low, lD.high);
                         // if vv {writeln((loc.id,task,tD));}
@@ -207,7 +207,7 @@ module RadixSortLSDTuple
                         // allocate counts
                         var taskBucketPos: [bD] int;
                         // get local domain's indices
-                        var lD = kr0.localSubdomain();
+                        var lD = kr0.domain;
                         // calc task's indices from local domain's indices
                         var tD = calcBlock(task, lD.low, lD.high);
                         // read start pos in to globalStarts back from transposed order

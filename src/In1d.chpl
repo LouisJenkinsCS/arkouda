@@ -103,7 +103,7 @@ module In1d
                 if logLevel == LogLevel.DEBUG {t.stop(); timings[here.id][1] = t.elapsed(); t.clear(); t.start();}
 
                 // in parallel check all elements of ar1 to see if ar2Set contains them
-                [i in truth.localSubdomain()] truth[i] = ar2Set.contains(ar1[i]);
+                [i in truth.domain] truth[i] = ar2Set.contains(ar1[i]);
 
                 if logLevel == LogLevel.DEBUG {t.stop(); timings[here.id][2] = t.elapsed();}
             }

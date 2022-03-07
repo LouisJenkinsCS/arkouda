@@ -106,7 +106,7 @@ module JoinEqWithDTMsg
         
         coforall loc in Locales {
             on loc {
-                forall i in a1.localSubdomain() {
+                forall i in a1.domain {
                     // more space in result list???
                     if (resCounters[here.id].read() < resLimitPerLocale) {
                         // find matching value(unique key in g2) and

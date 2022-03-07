@@ -117,7 +117,7 @@ var A, B : [D] real;
 writef("Running an FFTW MPI example on %i locales.\n",numLocales);
 for loc in Locales {
   on loc {
-    writef("Locale %i has a local subdomain : %t \n",here.id, D.localSubdomain());
+    writef("Locale %i has a local subdomain : %t \n",here.id, D.domain);
   }
 }
 
@@ -168,7 +168,7 @@ coforall loc in Locales {
     Barrier(CHPL_COMM_WORLD);
 
     // Get a pointer to the local part of the array
-    const localIndex = (A.localSubdomain()).first;
+    const localIndex = (A.domain).first;
     var Aptr = c_ptrTo(A.localAccess[localIndex]);
 
     // This plan is local to the locale
@@ -236,7 +236,7 @@ coforall loc in Locales {
     Barrier(CHPL_COMM_WORLD);
 
     // Get a pointer to the local part of the array
-    const localIndex = (A.localSubdomain()).first;
+    const localIndex = (A.domain).first;
     var Aptr = c_ptrTo(A.localAccess[localIndex]);
 
     // This plan is local to the locale

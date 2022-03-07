@@ -177,7 +177,7 @@ module RadixSortLSD
                         // allocate counts
                         var taskBucketCounts: [bD] int;
                         // get local domain's indices
-                        var lD = kr0.localSubdomain();
+                        var lD = kr0.domain;
                         // calc task's indices from local domain's indices
                         var tD = calcBlock(task, lD.low, lD.high);
                         try! rsLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
@@ -217,7 +217,7 @@ module RadixSortLSD
                         // allocate counts
                         var taskBucketPos: [bD] int;
                         // get local domain's indices
-                        var lD = kr0.localSubdomain();
+                        var lD = kr0.domain;
                         // calc task's indices from local domain's indices
                         var tD = calcBlock(task, lD.low, lD.high);
                         // read start pos in to globalStarts back from transposed order
@@ -299,7 +299,7 @@ module RadixSortLSD
                         // allocate counts
                         var taskBucketCounts: [bD] int;
                         // get local domain's indices
-                        var lD = k0.localSubdomain();
+                        var lD = k0.domain;
                         // calc task's indices from local domain's indices
                         var tD = calcBlock(task, lD.low, lD.high);
                         try! rsLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
@@ -338,7 +338,7 @@ module RadixSortLSD
                         // allocate counts
                         var taskBucketPos: [bD] int;
                         // get local domain's indices
-                        var lD = k0.localSubdomain();
+                        var lD = k0.domain;
                         // calc task's indices from local domain's indices
                         var tD = calcBlock(task, lD.low, lD.high);
                         // read start pos in to globalStarts back from transposed order

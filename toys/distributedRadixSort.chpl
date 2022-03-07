@@ -530,7 +530,7 @@ proc msbRadixSortWithScratchSpace(start_n:int, end_n:int,
     on loc do {
       // TODO: instead factor msbRadixSort into count and distribute
       // helper functions
-      ref localSlice = src.localSlice(src.localSubdomain()[start_n..end_n]);
+      ref localSlice = src.localSlice(src.domain[start_n..end_n]);
       var localCounts = localBucketize(localSlice, criterion, startbit);
       if debug {
         for bin in 0..radix {
@@ -568,7 +568,7 @@ proc msbRadixSortWithScratchSpace(start_n:int, end_n:int,
   // (because the scan is inclusive)
   coforall (loc,tid) in zip(src.targetLocales(),0..) {
     on loc do {
-      const localSubdomain = src.localSubdomain()[start_n..end_n];
+      const localSubdomain = src.domain[start_n..end_n];
       // Compute localOffsets array based on the counts here 
       // This could be written as a scan expression...
       var localOffsets:[0..radix] int;
@@ -616,7 +616,7 @@ proc msbRadixSortWithScratchSpace(start_n:int, end_n:int,
                           else start_n;
         var globalEnd = globalEnds[bin*ntasks+ntasks-1] - 1;
         if globalStart < globalEnd {
-          const localSubdomain = dst.localSubdomain()[start_n..end_n];
+          const localSubdomain = dst.domain[start_n..end_n];
           const curDomain = {globalStart..globalEnd};
           const intersect = curDomain[localSubdomain];
           if curDomain == intersect { // curDomain.isSubset(localSubdomain)
@@ -625,7 +625,7 @@ proc msbRadixSortWithScratchSpace(start_n:int, end_n:int,
                       " local sorting ", globalStart, "..", globalEnd);
             }
             // Great! Just sort it locally.
-            msbRadixSort(globalStart, globalEnd, dst.localSlice(curDomain),
+            msbRadixSort(globalStart, globalEnd, dst[curDomain],
                          criterion,
                          startbit+8, // since we already distributed by first 8
                          endbit,
