@@ -83,7 +83,7 @@ module SegStringSort {
       const ssDom = {stringsWithInds.domain.low..stringsWithInds.domain.high by stringsWithInds.domain.stride};
       compilerWarning("Type of highDom is " + highDom.type:string + " and type of ssDom is " + ssDom.type:string);
       forall (h, s) in zip(highDom, ssDom) with (var agg = newDstAggregator(int)) {
-        local do const (_,val) = stringsWithInds[s];
+        const (_,val) = stringsWithInds[s];
         agg.copy(gatherInds[h], val);
       }
       ssLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),

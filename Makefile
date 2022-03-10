@@ -28,6 +28,16 @@ CHPL_FLAGS += -lhdf5 -lhdf5_hl -lzmq
 # We have seen segfaults with cache remote at some node counts
 CHPL_FLAGS += --no-cache-remote
 
+# Need libzmq and hdf5, assume that we have spack
+SPACK_LIBZMQ = $(shell spack find -p libzmq | egrep -o '/.*libzmq.*')
+ifneq ( $(SPACK_LIBZMQ), )
+CHPL_FLAGS += -I$(SPACK_LIBZMQ)/include -L$(SPACK_LIBZMQ)/lib
+endif
+SPACK_HDF5 = $(shell spack find -p hdf5 | egrep -o '/.*hdf5.*')
+ifneq ( $(SPACK_HDF5), )
+CHPL_FLAGS += -I$(SPACK_HDF5)/include -L$(SPACK_HDF5)/lib
+endif
+
 # add-path: Append custom paths for non-system software.
 # Note: Darwin `ld` only supports `-rpath <path>`, not `-rpath=<paths>`.
 define add-path
